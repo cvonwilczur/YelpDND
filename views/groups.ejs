@@ -1,0 +1,8 @@
+<h1>This is the Groups page</h1>
+
+<% groups.forEach( group => { %>
+  <div>
+    <h4><%= group.name %></h4>
+    <img src='<%= group.image %>'>
+  </div>
+<% }) %>
