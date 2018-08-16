@@ -1,6 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const Group = require('./models/Group');
+const seedDB = require('./seeds');
+const Comment = require('./models/comment');
 
 const app = express();
 
@@ -8,25 +11,9 @@ mongoose.connect('mongodb://localhost/yelpdnd')
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
+app.use(express.static(__dirname+'/public'));
 
-//SCHEMA SETUP
-const groupSchema = new mongoose.Schema({
-  name: String,
-  image: String,
-  description: String
-});
-
-const Group = mongoose.model('Group', groupSchema);
-
-// Group.create(  {name: 'Phoenix Dragons', image: 'http://castlesandcooks.com/wp-content/uploads/2011/03/Dming-600x337.jpg', description: 'This groups is running Curse of Strahd currently and is around level 5.'},
-//             (err, group) => {
-//               if(err){
-//                 console.log(err);
-//               } else {
-//                 console.log('Newly created group');
-//                 console.log(group);
-//               }
-//             });
+seedDB();
 
 app.get('/', (req, res) => {
   res.render('landing');
@@ -37,13 +24,13 @@ app.get('/groups', (req, res) => {
     if(err){
       console.log(err);
     } else {
-      res.render('index', {groups: allGroups});
+      res.render('groups/index', {groups: allGroups});
     }
   })
 })
 
 app.get('/groups/new', (req, res) => {
-  res.render('new.ejs')
+  res.render('groups/new')
 })
 
 app.post('/groups', (req, res) => {
@@ -61,11 +48,42 @@ app.post('/groups', (req, res) => {
 })
 
 app.get('/groups/:id', (req, res) => {
-  Group.findById(req.params.id, (err, foundGroup) => {
+  Group.findById(req.params.id).populate("comments").exec((err, foundGroup) => {
     if(err){
       console.log(err);
     } else {
-      res.render('show', {group: foundGroup});
+      res.render('groups/show', {group: foundGroup});
+    }
+  })
+})
+
+
+// COMMENTS SECTION
+app.get('/groups/:id/comments/new', (req,res) => {
+  Group.findById(req.params.id, (err, group) => {
+    if(err){
+      console.log(err);
+    } else {
+      res.render('comments/new', {group: group});
+    }
+  })
+});
+
+app.post('/groups/:id/comments', (req, res) => {
+  Group.findById(req.params.id, (err, group) => {
+    if(err){
+      console.log(err);
+      res.redirect('/groups');
+    } else {
+      Comment.create(req.body.comment, (err, comment) => {
+        if(err){
+          console.log(err);
+        } else {
+          group.comments.push(comment);
+          group.save();
+          res.redirect('/groups/'+group._id);
+        }
+      })
     }
   })
 })
