@@ -2,20 +2,12 @@ const express = require('express');
 const router = express.Router({mergeParams: true});
 const Group = require('../models/Group');
 const Comment = require('../models/comment');
-
-
-const isLoggedIn = (req, res, next) => {
-  if(req.isAuthenticated()){
-    return next();
-  }
-  res.redirect('/login');
-}
-
+const middleware = require('../middleware/index.js');
 
 // COMMENTS SECTION
 
 //comments NEW
-router.get('/new', isLoggedIn, (req,res) => {
+router.get('/new', middleware.isLoggedIn, (req,res) => {
   Group.findById(req.params.id, (err, group) => {
     if(err){
       console.log(err);
@@ -26,7 +18,7 @@ router.get('/new', isLoggedIn, (req,res) => {
 });
 
 // Comments CREATE
-router.post('/', isLoggedIn, (req, res) => {
+router.post('/', middleware.isLoggedIn, (req, res) => {
   Group.findById(req.params.id, (err, group) => {
     if(err){
       console.log(err);
@@ -46,7 +38,40 @@ router.post('/', isLoggedIn, (req, res) => {
       })
     }
   })
+});
+
+// comments edit route
+router.get('/:comment_id/edit', middleware.checkCommentOwnership, (req, res) => {
+  Comment.findById(req.params.comment_id, (err, foundComment) => {
+    if(err){
+      res.redirect('back');
+    } else {
+      res.render('comments/edit', {group_id: req.params.id, comment: foundComment})
+    }
+  })
+});
+
+// comments update
+router.put('/:comment_id', middleware.checkCommentOwnership, (req, res) => {
+  Comment.findByIdAndUpdate(req.params.comment_id, req.body.comment, (err, updatedComment) => {
+    if(err) {
+      res.redirect('back');
+    } else {
+      res.redirect('/groups/' + req.params.id);
+    }
+  })
 })
 
+//comments destroy
+
+router.delete('/:comment_id', middleware.checkCommentOwnership, (req, res) => {
+  Comment.findByIdAndRemove(req.params.comment_id, (err) => {
+    if(err){
+    res.redirect('back');
+  } else {
+    res.redirect('/groups/' +req.params.id)
+  }
+})
+})
 
 module.exports = router;

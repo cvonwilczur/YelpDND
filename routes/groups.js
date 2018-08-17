@@ -1,32 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Group = require('../models/Group');
+const middleware = require('../middleware/index.js');
 
-
-const isLoggedIn = (req, res, next) => {
-  if(req.isAuthenticated()){
-    return next();
-  }
-  res.redirect('/login');
-}
-
-const checkGroupOwnership = (req, res, next) => {
-  if(req.isAuthenticated()){
-    Group.findById(req.params.id, (err, foundGroup) => {
-      if(err){
-        res.redirect('back');
-      }else{
-          if(foundGroup.author.id.equals(req.user._id)){
-          next();
-        } else {
-          res.redirect('back');
-         }
-        }
-    });
-  } else {
-    res.redirect('back');
-  }
-}
 
 router.get('/', (req, res) => {
   Group.find({}, (err, allGroups) => {
@@ -38,11 +14,11 @@ router.get('/', (req, res) => {
   })
 })
 
-router.get('/new', isLoggedIn, (req, res) => {
+router.get('/new', middleware.isLoggedIn, (req, res) => {
   res.render('groups/new')
 })
 
-router.post('/', isLoggedIn, (req, res) => {
+router.post('/', middleware.isLoggedIn, (req, res) => {
   let name = req.body.name;
   let image = req.body.image;
   let desc = req.body.description;
@@ -71,7 +47,7 @@ router.get('/:id', (req, res) => {
 })
 
 //edit group routes
-router.get('/:id/edit', checkGroupOwnership, (req, res) => {
+router.get('/:id/edit', middleware.checkGroupOwnership, (req, res) => {
     Group.findById(req.params.id, (err, foundGroup) => {
       if(err){
         res.redirect('/groups');
@@ -83,7 +59,7 @@ router.get('/:id/edit', checkGroupOwnership, (req, res) => {
 
 //update group route
 
-router.put('/:id', checkGroupOwnership, (req, res) => {
+router.put('/:id', middleware.checkGroupOwnership, (req, res) => {
   //find and update the correct groups
   Group.findByIdAndUpdate(req.params.id, req.body.group, (err, updatedGroup) => {
     if(err){
@@ -96,7 +72,7 @@ router.put('/:id', checkGroupOwnership, (req, res) => {
 })
 
 //destroy group routes
-router.delete('/:id', checkGroupOwnership, (req, res) => {
+router.delete('/:id', middleware.checkGroupOwnership, (req, res) => {
   Group.findByIdAndRemove(req.params.id, (err) => {
     if(err){
       res.redirect('/groups');
