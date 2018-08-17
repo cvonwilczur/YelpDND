@@ -18,8 +18,12 @@
           <h4><a><%= group.name %></a></h4>
           <p><%= group.description %></p>
           <p><em>Submitted By <%= group.author.username %></em></p>
-
-          <a class='btn btn-warning' href="/groups/<%= group._id %>/edit">Edit</a>
+          <% if(currentUser && group.author.id.equals(currentUser._id)){ %>
+            <a class='btn btn-warning' href="/groups/<%= group._id %>/edit">Edit</a>
+            <form id='deleteForm' action="/groups/<%= group._id %>?_method=DELETE" method="post">
+              <button class='btn btn-danger'>Delete</button>
+            </form>
+            <% } %>
         </div>
 
       </div>

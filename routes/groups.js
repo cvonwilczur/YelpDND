@@ -10,6 +10,24 @@ const isLoggedIn = (req, res, next) => {
   res.redirect('/login');
 }
 
+const checkGroupOwnership = (req, res, next) => {
+  if(req.isAuthenticated()){
+    Group.findById(req.params.id, (err, foundGroup) => {
+      if(err){
+        res.redirect('back');
+      }else{
+          if(foundGroup.author.id.equals(req.user._id)){
+          next();
+        } else {
+          res.redirect('back');
+         }
+        }
+    });
+  } else {
+    res.redirect('back');
+  }
+}
+
 router.get('/', (req, res) => {
   Group.find({}, (err, allGroups) => {
     if(err){
@@ -53,19 +71,19 @@ router.get('/:id', (req, res) => {
 })
 
 //edit group routes
-router.get('/:id/edit', (req, res) => {
-  Group.findById(req.params.id, (err, foundGroup) => {
-    if(err){
-      res.redirect('/groups');
-    }else{
-      res.render('groups/edit', {group: foundGroup});
-    }
-  });
-})
+router.get('/:id/edit', checkGroupOwnership, (req, res) => {
+    Group.findById(req.params.id, (err, foundGroup) => {
+      if(err){
+        res.redirect('/groups');
+      }else{
+        res.render('groups/edit', {group: foundGroup});
+        }
+    });
+});
 
 //update group route
 
-router.put('/:id', (req, res) => {
+router.put('/:id', checkGroupOwnership, (req, res) => {
   //find and update the correct groups
   Group.findByIdAndUpdate(req.params.id, req.body.group, (err, updatedGroup) => {
     if(err){
@@ -76,5 +94,16 @@ router.put('/:id', (req, res) => {
   })
   // /redirect somewhere
 })
+
+//destroy group routes
+router.delete('/:id', checkGroupOwnership, (req, res) => {
+  Group.findByIdAndRemove(req.params.id, (err) => {
+    if(err){
+      res.redirect('/groups');
+    } else {
+      res.redirect('/groups');
+    }
+  });
+});
 
 module.exports = router;
