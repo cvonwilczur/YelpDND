@@ -4,89 +4,48 @@ const mongoose = require('mongoose');
 const Group = require('./models/Group');
 const seedDB = require('./seeds');
 const Comment = require('./models/comment');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const User = require('./models/user');
+const methodOverride = require('method-override');
+
+const commentRoutes = require('./routes/comments');
+const groupRoutes = require('./routes/groups');
+const indexRoutes = require('./routes/index');
 
 const app = express();
 
 mongoose.connect('mongodb://localhost/yelpdnd')
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
+app.use(methodOverride('_method'));
 
 app.use(express.static(__dirname+'/public'));
+// seedDB();
 
-seedDB();
+// passport config
+app.use(require('express-session')({
+  secret: 'D&D is great',
+  resave: false,
+  saveUninitialized: false
+}));
 
-app.get('/', (req, res) => {
-  res.render('landing');
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
+  next();
 })
 
-app.get('/groups', (req, res) => {
-  Group.find({}, (err, allGroups) => {
-    if(err){
-      console.log(err);
-    } else {
-      res.render('groups/index', {groups: allGroups});
-    }
-  })
-})
-
-app.get('/groups/new', (req, res) => {
-  res.render('groups/new')
-})
-
-app.post('/groups', (req, res) => {
-  let name = req.body.name;
-  let image = req.body.image;
-  let desc = req.body.description;
-  let newGroup = {name: name, image: image, description: desc};
-  Group.create(newGroup, (err, newlyCreated) => {
-    if(err){
-      console.log(err);
-    } else {
-      res.redirect('/groups');
-    }
-  })
-})
-
-app.get('/groups/:id', (req, res) => {
-  Group.findById(req.params.id).populate("comments").exec((err, foundGroup) => {
-    if(err){
-      console.log(err);
-    } else {
-      res.render('groups/show', {group: foundGroup});
-    }
-  })
-})
-
-
-// COMMENTS SECTION
-app.get('/groups/:id/comments/new', (req,res) => {
-  Group.findById(req.params.id, (err, group) => {
-    if(err){
-      console.log(err);
-    } else {
-      res.render('comments/new', {group: group});
-    }
-  })
-});
-
-app.post('/groups/:id/comments', (req, res) => {
-  Group.findById(req.params.id, (err, group) => {
-    if(err){
-      console.log(err);
-      res.redirect('/groups');
-    } else {
-      Comment.create(req.body.comment, (err, comment) => {
-        if(err){
-          console.log(err);
-        } else {
-          group.comments.push(comment);
-          group.save();
-          res.redirect('/groups/'+group._id);
-        }
-      })
-    }
-  })
-})
+app.use(indexRoutes);
+app.use('/groups', groupRoutes);
+app.use('/groups/:id/comments', commentRoutes);
 
 app.listen(3000, () => {
   console.log('Test - Server is live on port 3000');

@@ -33,29 +33,29 @@ const seedDB = () => {
             }
             console.log("removed comments!");
              //add a few Groups
-            data.forEach(function(seed){
-                Group.create(seed, function(err, Group){
-                    if(err){
-                        console.log(err)
-                    } else {
-                        console.log("added a Group");
-                        //create a comment
-                        Comment.create(
-                            {
-                                text: "This group is great, but I wish there were more snacks",
-                                author: "Homer"
-                            }, function(err, comment){
-                                if(err){
-                                    console.log(err);
-                                } else {
-                                    Group.comments.push(comment);
-                                    Group.save();
-                                    console.log("Created new comment");
-                                }
-                            });
-                    }
-                });
-            });
+            // data.forEach(function(seed){
+            //     Group.create(seed, function(err, Group){
+            //         if(err){
+            //             console.log(err)
+            //         } else {
+            //             console.log("added a Group");
+            //             //create a comment
+            //             Comment.create(
+            //                 {
+            //                     text: "This group is great, but I wish there were more snacks",
+            //                     author: "Homer"
+            //                 }, function(err, comment){
+            //                     if(err){
+            //                         console.log(err);
+            //                     } else {
+            //                         Group.comments.push(comment);
+            //                         Group.save();
+            //                         console.log("Created new comment");
+            //                     }
+            //                 });
+            //         }
+            //     });
+            // });
         });
     });
     //add a few comments

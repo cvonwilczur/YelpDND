@@ -17,7 +17,9 @@
           <h4 class='pull-right'>4/5 players</h4>
           <h4><a><%= group.name %></a></h4>
           <p><%= group.description %></p>
+          <p><em>Submitted By <%= group.author.username %></em></p>
 
+          <a class='btn btn-warning' href="/groups/<%= group._id %>/edit">Edit</a>
         </div>
 
       </div>
@@ -29,7 +31,7 @@
         <% group.comments.forEach((comment) => { %>
           <div class="row">
             <div class="col-md-12">
-              <strong><%= comment.author %></strong>
+              <strong><%= comment.author.username %></strong>
               <span class='pull-right'>10 days ago</span>
               <p><%= comment.text %></p>
             </div>
