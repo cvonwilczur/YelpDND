@@ -69,6 +69,7 @@ router.delete('/:comment_id', middleware.checkCommentOwnership, (req, res) => {
     if(err){
     res.redirect('back');
   } else {
+    req.flash('success', 'Comment successfully deleted');
     res.redirect('/groups/' +req.params.id)
   }
 })
